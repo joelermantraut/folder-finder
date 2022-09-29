@@ -8,10 +8,6 @@ const ipcMain = electron.ipcMain;
 var setWindow = null;
 var mainWindow = null;
 
-ipcMain.on('close', function(event) {
-  app.quit();
-});
-
 // Quit when all windows are closed.
 app.on('window-all-closed', function() {
   // On OS X it is common for applications and their menu bar

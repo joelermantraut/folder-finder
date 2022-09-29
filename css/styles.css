@@ -35,7 +35,6 @@ body {
   background: #00ca00;
   padding: 0.5em;
   margin-bottom: 0.25em;
-  cursor: pointer;
 }
 .search p.show {
   display: block;
@@ -50,13 +49,21 @@ body {
 }
 .search .list li {
   position: relative;
-  padding: 0.5em;
+  padding: 0.15em;
   font-style: italic;
   cursor: pointer;
   overflow: hidden;
 }
 .search .list li p {
   background: transparent;
+  margin-left: 10px;
+  overflow: hidden;
+  max-width: 50ch;
+  -o-text-overflow: ellipsis;
+     text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  direction: rtl;
 }
 .search .list li:hover {
   word-wrap: break-word;

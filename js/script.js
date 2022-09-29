@@ -1,11 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const exec = require('child_process').exec;
-const electron = require('electron');
-const {shell} = require('electron');
-const { config } = require('process');
-const { connect } = require('http2');
-const ipcRenderer = electron.ipcRenderer;
 
 // DECLARACIONES
 
@@ -36,19 +30,25 @@ get_el_coord = function (element) {
     return objRect;
 }
 
-buscador = function(filelist) {
-    files = fs.readdirSync(__dirname + "/files/");
-    filelist = filelist || [];
+run_search = function(path) {
+    if (path == undefined) {
+        path = process.cwd();
+        // If no path, actual path default
+    }
 
-    files.forEach(function(file) {
-        if (fs.statSync(dir + '/' + file).isDirectory()) {
-            if (file == busqueda) {
-                filelist.push(path.join(dir, file));
-            }
-            filelist = buscador(dir + '/' + file, filelist);
-        }
-    });
-    return filelist;
+    let needle = 'needle'; // No idea what it does
+    let files = undefined;
+    try {
+        files = fs.readdirSync(path);
+    } catch (error) {
+        console.log(error);
+    }
+
+    return files;
+}
+
+buscador = function(filelist) {
+    ;
 }
 
 // FUNCIONES
@@ -72,12 +72,9 @@ window.onload = function() {
     var mode = "search";
     
     var mainFolder = fs.readFileSync(fileDir, 'utf8').replace('\n', '');
+    var mainDir = mainFolder;
     
     // ELEMENTS
-
-    close_button.addEventListener('click', function(event) {
-        ipcRenderer.send('close');
-    });
     
     config_button.addEventListener('click', function(event) {
         mode = "config";
@@ -120,18 +117,19 @@ window.onload = function() {
         if (event.keyCode == 13) {
             if (mode == "config") {
                 fs.writeFileSync(fileDir, input.value);
+                mainFolder = fs.readFileSync(fileDir, 'utf8').replace('\n', '');
 
                 indicador.innerText = "Guardado";
 
                 input.value = "";
 
                 mode = "search";
-            } else {
+            } else if (mode == "search") {
                 let folderList = input.value;
 
                 if (mainFolder.length > 0) {
                     busqueda = input.value;
-                    folderList = buscador(mainFolder, folderList);
+                    // folderList = run_search(mainFolder);
                     addToList(lista, folderList);
                 }
             }
@@ -187,8 +185,17 @@ window.onload = function() {
                 this.innerHTML = "<p>" + this.innerText + "</p>";
             });
             item.getElementsByTagName("p")[0].addEventListener("click", function(event) {
-                // shell.openItem(this.innerText);
-                console.log("Abrir: " + this.innerText);
+                let dir = mainDir + this.innerText;
+                if (fs.lstatSync(dir).isDirectory()) {
+                    mainDir = dir;
+                    let path_list = run_search(mainDir);
+                    addToList(lista, path_list);
+                }
+            });
+            item.getElementsByTagName("p")[0].addEventListener("dblclick", function(event) {
+                let dir = mainDir + this.innerText;
+                // shell.openItem(dir);
+                console.log("Abrir: " + dir);
                 input.value = "";
             });
         });
@@ -196,7 +203,6 @@ window.onload = function() {
 
     addToList = function(main_list, new_list) {
         let items = Array.from(main_list.getElementsByTagName('li'));
-    
         items.forEach(item => {
             item.remove();
         });
@@ -209,15 +215,6 @@ window.onload = function() {
         updateItems(main_list);
     }
 
-    addToList(lista, ["Elemento 1", "Elemento 2", "Elemento 3"]);
+    let path_list = run_search(mainFolder);
+    addToList(lista, path_list);
 }
-
-/*
-
-$indicador.on('click', function(event) {
-    dir = $input.val();
-    fs.writeFileSync(fileDir, dir);
-    $(this).slideUp('slow');
-    $input.val('');
-});
-*/

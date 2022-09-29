@@ -13,6 +13,7 @@
   "author": "Ermantraut Joel",
   "license": "ISC",
   "dependencies": {
-    "electron-prebuilt": "^1.4.13"
+    "electron-prebuilt": "^1.4.13",
+    "fast-find-in-files": "^0.1.1"
   }
 }

@@ -2,6 +2,7 @@
 
 *
 	box-sizing: border-box
+    user-select: none
 
 html, body, .container
 	width: 100%
@@ -31,8 +32,6 @@ body
 		padding: .5em
 		margin-bottom: .25em
 
-		cursor: pointer
-
 		&.show
 			display: block
 
@@ -49,7 +48,7 @@ body
 		li
 			position: relative
 
-			padding: .5em
+			padding: .15em
 
 			font-style: italic
 
@@ -59,6 +58,14 @@ body
 			
 			p
 				background: transparent
+
+				margin-left: 10px
+				overflow: hidden
+				max-width: 50ch
+				text-overflow: ellipsis
+				white-space: nowrap
+				display: block
+				direction: rtl
 
 			&:hover
 				word-wrap: break-word
