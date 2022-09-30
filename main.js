@@ -41,6 +41,10 @@ app.on('ready', function() {
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 
+  ipcMain.on('close', (event, title) => {
+    app.quit();
+  });
+
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
     // Dereference the window object, usually you would store windows

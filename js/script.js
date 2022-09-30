@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const exec = require("child_process").exec;
+const { ipcRenderer } = require('electron');
 
 // DECLARACIONES
 
@@ -83,6 +84,10 @@ window.onload = function() {
     
     // ELEMENTS
     
+    close_button.addEventListener("click", function(event) {
+        ipcRenderer.send('close');
+    });
+    
     config_button.addEventListener('click', function(event) {
         mode = "config";
 
@@ -99,23 +104,32 @@ window.onload = function() {
     });
     
     marks.addEventListener('click', function(event) {
-        mode = "marks";
+        if (mode === "marks") {
+            mode = "search";
 
-        let items = Array.from(lista.getElementsByTagName('li'));
-        items.forEach(item => {
-            item.remove();
-        });
-        // Elimina todos los items de la lista
+            let path_list = run_search(mainFolder);
+            addToList(lista, path_list);
 
-        input.value = "";
+            indicador.innerText = "Seleccione un archivo para abrir";
+        } else if (mode === "search") {
+            mode = "marks";
 
-        marcadores = fs.readFileSync(markDir, 'utf8');
+            let items = Array.from(lista.getElementsByTagName('li'));
+            items.forEach(item => {
+                item.remove();
+            });
+            // Elimina todos los items de la lista
 
-        if (marcadores.length) {
-            addToList(lista, marcadores.split(";"));
-            indicador.innerText = "Seleccione un marcador";
-        } else {
-            indicador.innerText = "No hay marcadores";
+            input.value = "";
+
+            marcadores = fs.readFileSync(markDir, 'utf8');
+
+            if (marcadores.length) {
+                addToList(lista, marcadores.split(";"));
+                indicador.innerText = "Seleccione un marcador";
+            } else {
+                indicador.innerText = "No hay marcadores";
+            }
         }
     });
 
@@ -154,11 +168,25 @@ window.onload = function() {
         items.forEach(item => {
             item.addEventListener('mouseenter', function(event) {
                 if (mode == "search") {
-                    let add_item = add_element(item, "div", {
-                        "className": "icon-add"
-                    });
+                    let marks = fs.readFileSync(markDir, 'utf8');
+                    marks = marks.split(';');
+                    // Gets marks to compare
+                    
+                    let item_text = item.getElementsByTagName("p")[0].innerText;
+
+                    let in_item = undefined;
+
+                    if (marks.includes(item_text)) {
+                        in_item = add_element(item, "div", {
+                            "className": "icon-less"
+                        });
+                    } else {
+                        in_item = add_element(item, "div", {
+                            "className": "icon-add"
+                        });
+                    }
     
-                    add_item.addEventListener('click', function(event) {
+                    in_item.addEventListener('click', function(event) {
                         content = fs.readFileSync(markDir, 'utf8');
                         added_dir = item.getElementsByTagName("p")[0].innerText;
                         if (content.length == 0) {
@@ -168,6 +196,24 @@ window.onload = function() {
                         }
     
                         indicador.innerText = "Agregado a marcadores";
+                        in_item.classList.remove("icon-add");
+                        in_item.classList.add("icon-less");
+                    });
+
+                    in_item.addEventListener('click', function(event) {
+                        let el_text = item.getElementsByTagName("p")[0].innerText;
+
+                        let content = fs.readFileSync(markDir, 'utf8');
+                        content = content.split(';');
+
+                        let index = content.indexOf(el_text);
+                        if (index !== -1) content.splice(index, 1);
+
+                        content = content.join(';');
+                        fs.writeFileSync(markDir, content);
+
+                        in_item.classList.remove("icon-less");
+                        in_item.classList.add("icon-add");
                     });
                 } else if (mode == "marks") {
                     let less_item = add_element(item, "div", {
@@ -187,6 +233,8 @@ window.onload = function() {
                         fs.writeFileSync(markDir, content);
 
                         addToList(lista, content);
+                        add_item.classList.remove("icon-less");
+                        add_item.classList.add("icon-add");
                     });
                 }
             });
@@ -216,12 +264,6 @@ window.onload = function() {
                     console.log("Abrir: " + dir);
                 }
             });
-            // item.getElementsByTagName("p")[0].addEventListener("dblclick", function(event) {
-            //     let dir = mainDir + this.innerText;
-            //     shell.openItem(dir);
-            //     console.log("Abrir: " + dir);
-            //     input.value = "";
-            // });
         });
     }
 
@@ -235,12 +277,13 @@ window.onload = function() {
         // Elimina todos los items de la lista
     
         for (var i = 0; i < new_list.length; i++) {
-          add_element(main_list, "li", {"innerHTML": "<p>" + new_list[i] + "</p>"});
+            add_element(main_list, "li", {"innerHTML": "<p>" + new_list[i] + "</p>"});
         }
 
         updateItems(main_list);
     }
 
+    indicador.innerText = "Seleccione un archivo para abrir";
     let path_list = run_search(mainFolder);
     addToList(lista, path_list);
 }
