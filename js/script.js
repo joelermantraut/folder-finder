@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const exec = require("child_process").exec;
 
 // DECLARACIONES
 
@@ -43,8 +44,6 @@ run_search = function(path) {
     } catch (error) {
         console.log(error);
     }
-
-    console.log(files);
 
     return files;
 }
@@ -195,25 +194,40 @@ window.onload = function() {
                 this.innerHTML = "<p>" + this.innerText + "</p>";
             });
             item.getElementsByTagName("p")[0].addEventListener("click", function(event) {
+                if (this.innerText === "..") {
+                    // Back to parent
+                    mainDir = mainDir.split("/");
+                    mainDir.pop();  
+                    mainDir = mainDir.join("/") + "/";
+
+                    this.innerText = "";
+                }
+
                 let dir = mainDir + this.innerText;
                 if (fs.lstatSync(dir).isDirectory()) {
                     mainDir = dir;
                     let path_list = run_search(mainDir);
                     addToList(lista, path_list);
                 } else {
-                    console.log("Not a directory");
+                    let dir = mainDir + this.innerText;
+                    exec("xdg-open " + dir);
+                    input.value = "";
+
+                    console.log("Abrir: " + dir);
                 }
             });
-            item.getElementsByTagName("p")[0].addEventListener("dblclick", function(event) {
-                let dir = mainDir + this.innerText;
-                // shell.openItem(dir);
-                console.log("Abrir: " + dir);
-                input.value = "";
-            });
+            // item.getElementsByTagName("p")[0].addEventListener("dblclick", function(event) {
+            //     let dir = mainDir + this.innerText;
+            //     shell.openItem(dir);
+            //     console.log("Abrir: " + dir);
+            //     input.value = "";
+            // });
         });
     }
 
     addToList = function(main_list, new_list) {
+        new_list.unshift(".."); 
+
         let items = Array.from(main_list.getElementsByTagName('li'));
         items.forEach(item => {
             item.remove();
