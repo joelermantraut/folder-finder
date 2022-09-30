@@ -62,7 +62,7 @@ searcher = function(filelist, key) {
 
 window.onload = function() {
     const fileDir = path.join(__dirname, '/files/dir.cfg');
-    const markDir = path.join(__dirname, '/files/marks.cfg');
+    const favDir = path.join(__dirname, '/files/fav.cfg');
 
     // CONSTANTS
 
@@ -71,7 +71,7 @@ window.onload = function() {
     let lista = document.getElementsByClassName("list")[0];
     let close_button = document.getElementsByClassName("icon-close")[0];
     let config_button = document.getElementsByClassName("icon-config")[0];
-    let marks_button = document.getElementsByClassName("icon-mark")[0];
+    let favs_button = document.getElementsByClassName("icon-mark")[0];
     
     var mode = "search";
     
@@ -99,8 +99,8 @@ window.onload = function() {
         // Deletes all items in list
     });
     
-    marks_button.addEventListener('click', function(event) {
-        if (mode === "marks") {
+    favs_button.addEventListener('click', function(event) {
+        if (mode === "favs") {
             mode = "search";
 
             let path_list = run_search(mainFolder);
@@ -108,7 +108,7 @@ window.onload = function() {
 
             indicador.innerText = "Seleccione un archivo para abrir";
         } else if (mode === "search") {
-            mode = "marks";
+            mode = "favs";
 
             let items = Array.from(lista.getElementsByTagName('li'));
             items.forEach(item => {
@@ -118,13 +118,13 @@ window.onload = function() {
 
             input.value = "";
 
-            marcadores = fs.readFileSync(markDir, 'utf8');
+            marcadores = fs.readFileSync(favDir, 'utf8');
 
             if (marcadores.length) {
                 addToList(lista, marcadores.split(";"));
-                indicador.innerText = "Select mark";
+                indicador.innerText = "Select favorite";
             } else {
-                indicador.innerText = "No marks";
+                indicador.innerText = "No favorites";
             }
         }
     });
@@ -161,15 +161,15 @@ window.onload = function() {
         items.forEach(item => {
             item.addEventListener('mouseenter', function(event) {
                 if (mode == "search") {
-                    let marks = fs.readFileSync(markDir, 'utf8');
-                    marks = marks.split(';');
-                    // Gets marks to compare
+                    let favs = fs.readFileSync(favDir, 'utf8');
+                    favs = favs.split(';');
+                    // Gets favs to compare
                     
                     let item_text = item.getElementsByTagName("p")[0].innerText;
 
                     let in_item = undefined;
 
-                    if (marks.includes(item_text)) {
+                    if (favs.includes(item_text)) {
                         in_item = add_element(item, "div", {
                             "className": "icon-less"
                         });
@@ -181,7 +181,7 @@ window.onload = function() {
     
                     if (item.getElementsByClassName("icon-add").length)
                         item.getElementsByClassName("icon-add")[0].addEventListener('click', function(event) {
-                            add_to_marks(item);
+                            add_to_favs(item);
         
                             indicador.innerText = "Agregado a marcadores";
                             in_item.classList.remove("icon-add");
@@ -192,20 +192,20 @@ window.onload = function() {
                         item.getElementsByClassName("icon-less")[0].addEventListener('click', function(event) {
                             let el_text = item.getElementsByTagName("p")[0].innerText;
 
-                            let content = fs.readFileSync(markDir, 'utf8');
+                            let content = fs.readFileSync(favDir, 'utf8');
                             content = content.split(';');
 
                             let index = content.indexOf(el_text);
                             if (index !== -1) content.splice(index, 1);
 
                             content = content.join(';');
-                            fs.writeFileSync(markDir, content);
+                            fs.writeFileSync(favDir, content);
 
                             in_item.classList.remove("icon-less");
                             in_item.classList.add("icon-add");
                         });
 
-                } else if (mode == "marks") {
+                } else if (mode == "favs") {
                     let less_item = add_element(item, "div", {
                         "className": "icon-less"
                     });
@@ -213,14 +213,14 @@ window.onload = function() {
                     less_item.addEventListener('click', function(event) {
                         let el_text = item.getElementsByTagName("p")[0].innerText;
 
-                        let content = fs.readFileSync(markDir, 'utf8');
+                        let content = fs.readFileSync(favDir, 'utf8');
                         content = content.split(';');
 
                         let index = content.indexOf(el_text);
                         if (index !== -1) content.splice(index, 1);
 
                         content = content.join(';');
-                        fs.writeFileSync(markDir, content);
+                        fs.writeFileSync(favDir, content);
 
                         addToList(lista, content);
                         add_item.classList.remove("icon-less");
@@ -262,23 +262,39 @@ window.onload = function() {
         updateItems(main_list);
     }
 
-    add_to_marks = function(item) {
-        content = fs.readFileSync(markDir, 'utf8');
+    add_to_favs = function(item) {
+        content = fs.readFileSync(favDir, 'utf8');
         added_dir = item.getElementsByTagName("p")[0].innerText;
         
         if (content.includes(added_dir)) return;
         // Avoid adding duplicated dirs
 
         if (content.length == 0) {
-            fs.writeFileSync(markDir, added_dir);
+            fs.writeFileSync(favDir, added_dir);
         } else {
-            fs.writeFileSync(markDir, content + ';' + added_dir);
+            fs.writeFileSync(favDir, content + ';' + added_dir);
         }
     }
 
     indicador.innerText = "Select file to open";
     let path_list = run_search(mainFolder);
     addToList(lista, path_list);
+    // Adds firsts elements to list
+    
+    if (!fs.existsSync(fileDir)) {
+        fs.writeFile(fileDir, process.cwd(), function (err) {
+            if (err) throw err;
+            console.log('fileDir was created successfully');
+        });
+    }
+
+    if (!fs.existsSync(favDir)) {
+        fs.writeFile(favDir, "", function (err) {
+            if (err) throw err;
+            console.log('favDir was created successfully');
+        });
+    }
+    // Creates files if not exists
 
     input.focus();
 }
