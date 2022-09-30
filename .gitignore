@@ -181,3 +181,4 @@ prepros.config
 # End of https://www.toptal.com/developers/gitignore/api/node,visualstudiocode,sass,prepros
 
 config/
+files/
