@@ -59,11 +59,11 @@ body {
   margin-left: 10px;
   overflow: hidden;
   max-width: 50ch;
-  -o-text-overflow: ellipsis;
-     text-overflow: ellipsis;
+  /* -o-text-overflow: ellipsis; */
+  /*    text-overflow: ellipsis; */
   white-space: nowrap;
   display: block;
-  direction: rtl;
+  /* direction: rtl; */
 }
 .search .list li:hover {
   word-wrap: break-word;
