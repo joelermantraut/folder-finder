@@ -232,15 +232,6 @@ window.onload = function() {
                 this.innerHTML = "<p>" + this.innerText + "</p>";
             });
             item.getElementsByTagName("p")[0].addEventListener("click", function(event) {
-                if (this.innerText === "..") {
-                    // Back to parent
-                    mainDir = mainDir.split("/");
-                    mainDir.pop();  
-                    mainDir = mainDir.join("/") + "/";
-
-                    this.innerText = "";
-                }
-
                 let dir = mainDir + this.innerText;
                 if (fs.lstatSync(dir).isDirectory()) {
                     mainDir = dir + "/";
