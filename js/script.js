@@ -44,11 +44,19 @@ run_search = function(path) {
         console.log(error);
     }
 
+    console.log(files);
+
     return files;
 }
 
-buscador = function(filelist) {
-    ;
+buscador = function(filelist, key) {
+    new_filelist = [];
+    filelist.forEach(file => {
+        if (file.includes(key))
+            new_filelist.push(file)
+    });
+
+    return new_filelist;
 }
 
 // FUNCIONES
@@ -127,10 +135,12 @@ window.onload = function() {
             } else if (mode == "search") {
                 let folderList = input.value;
 
-                if (mainFolder.length > 0) {
-                    busqueda = input.value;
-                    // folderList = run_search(mainFolder);
-                    addToList(lista, folderList);
+                if (mainDir.length > 0) {
+                    key = input.value;
+                    folderList = run_search(mainFolder);
+                    correct_files = buscador(folderList, key)
+                    console.log(correct_files)
+                    // addToList(lista, folderList);
                 }
             }
         }
@@ -190,6 +200,8 @@ window.onload = function() {
                     mainDir = dir;
                     let path_list = run_search(mainDir);
                     addToList(lista, path_list);
+                } else {
+                    console.log("Not a directory");
                 }
             });
             item.getElementsByTagName("p")[0].addEventListener("dblclick", function(event) {
