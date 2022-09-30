@@ -3,14 +3,11 @@ const path = require('path');
 const exec = require("child_process").exec;
 const { ipcRenderer } = require('electron');
 
-// DECLARACIONES
+// IMPORTS 
 
 add_element = function (parent, child, properties) {
     /*
-    Añade un elemento hijo a un elemento padre
-    Le asigna las propiedades en "properties"
-    "properties" es un diccionario con las propiedades
-    como keys y sus valores como values
+     * Adds elements to parent in DOM.
     */
     var node = document.createElement(child);
 
@@ -25,20 +22,22 @@ add_element = function (parent, child, properties) {
 
 get_el_coord = function (element) {
     /*
-    Obtiene el objeto "Rect" que devuelve una tupla
-    con parametros top,left,right,bottom,x,y,width y height.
+     * Gets Rect object and return tuple containing 
+     * top, left, right, bottom, x, y, width and height.
     */
     var objRect = element.getBoundingClientRect();
     return objRect;
 }
 
 run_search = function(path) {
+    /*
+     * Runs search of all files in directory. 
+    */
     if (path == undefined) {
         path = process.cwd();
         // If no path, actual path default
     }
 
-    let needle = 'needle'; // No idea what it does
     let files = undefined;
     try {
         files = fs.readdirSync(path);
@@ -49,7 +48,7 @@ run_search = function(path) {
     return files;
 }
 
-buscador = function(filelist, key) {
+searcher = function(filelist, key) {
     new_filelist = [];
     filelist.forEach(file => {
         if (file.includes(key))
@@ -59,7 +58,7 @@ buscador = function(filelist, key) {
     return new_filelist;
 }
 
-// FUNCIONES
+// FUNCTIONS 
 
 window.onload = function() {
     const fileDir = path.join(__dirname, '/files/dir.cfg');
@@ -72,11 +71,8 @@ window.onload = function() {
     let lista = document.getElementsByClassName("list")[0];
     let close_button = document.getElementsByClassName("icon-close")[0];
     let config_button = document.getElementsByClassName("icon-config")[0];
-    let marks = document.getElementsByClassName("icon-mark")[0];
+    let marks_button = document.getElementsByClassName("icon-mark")[0];
     
-    var markOn = false;
-    var folderList = [];
-    var busqueda;
     var mode = "search";
     
     var mainFolder = fs.readFileSync(fileDir, 'utf8').replace('\n', '');
@@ -92,7 +88,7 @@ window.onload = function() {
         mode = "config";
 
         input.value = mainFolder;
-        // Coloca el nombre de la carpeta principal para poder editarla
+        // Sets main folder name in input to edit it
 
         indicador.innerText = "Presiona ENTER para cambiar la carpeta principal"
 
@@ -100,10 +96,10 @@ window.onload = function() {
         items.forEach(item => {
             item.remove();
         });
-        // Elimina todos los items de la lista
+        // Deletes all items in list
     });
     
-    marks.addEventListener('click', function(event) {
+    marks_button.addEventListener('click', function(event) {
         if (mode === "marks") {
             mode = "search";
 
@@ -118,7 +114,7 @@ window.onload = function() {
             items.forEach(item => {
                 item.remove();
             });
-            // Elimina todos los items de la lista
+            // Deletes all items in list
 
             input.value = "";
 
@@ -126,9 +122,9 @@ window.onload = function() {
 
             if (marcadores.length) {
                 addToList(lista, marcadores.split(";"));
-                indicador.innerText = "Seleccione un marcador";
+                indicador.innerText = "Select mark";
             } else {
-                indicador.innerText = "No hay marcadores";
+                indicador.innerText = "No marks";
             }
         }
     });
@@ -151,16 +147,13 @@ window.onload = function() {
                 if (mainDir.length > 0) {
                     key = input.value;
                     folderList = run_search(mainFolder);
-                    correct_files = buscador(folderList, key)
-                    console.log(correct_files)
-                    // addToList(lista, folderList);
+                    correct_files = searcher(folderList, key);
+                    addToList(lista, correct_files);
                 }
             }
         }
       
     });
-
-    input.focus();
 
     updateItems = function(lista) {
         let items = Array.from(lista.getElementsByTagName("li"));
@@ -186,35 +179,32 @@ window.onload = function() {
                         });
                     }
     
-                    in_item.addEventListener('click', function(event) {
-                        content = fs.readFileSync(markDir, 'utf8');
-                        added_dir = item.getElementsByTagName("p")[0].innerText;
-                        if (content.length == 0) {
-                            fs.writeFileSync(markDir, added_dir);
-                        } else {
-                            fs.writeFileSync(markDir, content + ';' + added_dir);
-                        }
-    
-                        indicador.innerText = "Agregado a marcadores";
-                        in_item.classList.remove("icon-add");
-                        in_item.classList.add("icon-less");
-                    });
+                    if (item.getElementsByClassName("icon-add").length)
+                        item.getElementsByClassName("icon-add")[0].addEventListener('click', function(event) {
+                            add_to_marks(item);
+        
+                            indicador.innerText = "Agregado a marcadores";
+                            in_item.classList.remove("icon-add");
+                            in_item.classList.add("icon-less");
+                        });
 
-                    in_item.addEventListener('click', function(event) {
-                        let el_text = item.getElementsByTagName("p")[0].innerText;
+                    if (item.getElementsByClassName("icon-less").length)
+                        item.getElementsByClassName("icon-less")[0].addEventListener('click', function(event) {
+                            let el_text = item.getElementsByTagName("p")[0].innerText;
 
-                        let content = fs.readFileSync(markDir, 'utf8');
-                        content = content.split(';');
+                            let content = fs.readFileSync(markDir, 'utf8');
+                            content = content.split(';');
 
-                        let index = content.indexOf(el_text);
-                        if (index !== -1) content.splice(index, 1);
+                            let index = content.indexOf(el_text);
+                            if (index !== -1) content.splice(index, 1);
 
-                        content = content.join(';');
-                        fs.writeFileSync(markDir, content);
+                            content = content.join(';');
+                            fs.writeFileSync(markDir, content);
 
-                        in_item.classList.remove("icon-less");
-                        in_item.classList.add("icon-add");
-                    });
+                            in_item.classList.remove("icon-less");
+                            in_item.classList.add("icon-add");
+                        });
+
                 } else if (mode == "marks") {
                     let less_item = add_element(item, "div", {
                         "className": "icon-less"
@@ -253,28 +243,26 @@ window.onload = function() {
 
                 let dir = mainDir + this.innerText;
                 if (fs.lstatSync(dir).isDirectory()) {
-                    mainDir = dir;
+                    mainDir = dir + "/";
                     let path_list = run_search(mainDir);
                     addToList(lista, path_list);
                 } else {
-                    let dir = mainDir + this.innerText;
+                    console.log("xdg-open " + dir);
                     exec("xdg-open " + dir);
                     input.value = "";
-
-                    console.log("Abrir: " + dir);
                 }
             });
         });
     }
 
     addToList = function(main_list, new_list) {
-        new_list.unshift(".."); 
-
         let items = Array.from(main_list.getElementsByTagName('li'));
         items.forEach(item => {
             item.remove();
         });
-        // Elimina todos los items de la lista
+        // Deletes all elements in list 
+
+        new_list.unshift(".."); 
     
         for (var i = 0; i < new_list.length; i++) {
             add_element(main_list, "li", {"innerHTML": "<p>" + new_list[i] + "</p>"});
@@ -283,7 +271,23 @@ window.onload = function() {
         updateItems(main_list);
     }
 
-    indicador.innerText = "Seleccione un archivo para abrir";
+    add_to_marks = function(item) {
+        content = fs.readFileSync(markDir, 'utf8');
+        added_dir = item.getElementsByTagName("p")[0].innerText;
+        
+        if (content.includes(added_dir)) return;
+        // Avoid adding duplicated dirs
+
+        if (content.length == 0) {
+            fs.writeFileSync(markDir, added_dir);
+        } else {
+            fs.writeFileSync(markDir, content + ';' + added_dir);
+        }
+    }
+
+    indicador.innerText = "Select file to open";
     let path_list = run_search(mainFolder);
     addToList(lista, path_list);
+
+    input.focus();
 }
